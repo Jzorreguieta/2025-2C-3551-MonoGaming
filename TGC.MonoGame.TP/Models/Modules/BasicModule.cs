@@ -18,9 +18,9 @@ internal class BasicModule
         var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(90));
 
         _worldMatrix = worldMatrix * rotation;
-        _model = content.Load<Model>(contentFolder3D + "Modules/BasicModule/Model/Gang_grade001");
+        _model = content.Load<Model>(contentFolder3D + "Modules/Gang_grade001");
         _effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
-        _effect.Parameters["DiffuseColor"].SetValue(Color.DarkBlue.ToVector3());
+        _effect.Parameters["DiffuseColor"].SetValue(Color.LightBlue.ToVector3());
 
 
         foreach (var mesh in _model.Meshes)

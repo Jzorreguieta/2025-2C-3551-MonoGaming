@@ -19,7 +19,7 @@
 /processorParam:DebugMode=Auto
 /build:Effects/BasicShader.fx
 
-#begin Models/Modules/BasicModule/Model/Gang_grade001.fbx
+#begin Models/Modules/Gang_grade001.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
 /processorParam:ColorKeyColor=0,0,0,0
@@ -36,17 +36,5 @@
 /processorParam:Scale=1
 /processorParam:SwapWindingOrder=False
 /processorParam:TextureFormat=Compressed
-/build:Models/Modules/BasicModule/Model/Gang_grade001.fbx
-
-#begin Models/Modules/BasicModule/Texture/28160199f9b447fc55421223daaa727f.jpg
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Models/Modules/BasicModule/Texture/28160199f9b447fc55421223daaa727f.jpg;Models/Modules/28160199f9b447fc55421223daaa727f
+/build:Models/Modules/Gang_grade001.fbx
 

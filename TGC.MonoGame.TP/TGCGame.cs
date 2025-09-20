@@ -4,6 +4,7 @@ using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.Samples.Cameras;
 
 namespace  TGC.MonoGame.TP;
 
@@ -15,6 +16,8 @@ public class TGCGame : Game
     public const string ContentFolderSounds = "Sounds/";
     public const string ContentFolderSpriteFonts = "SpriteFonts/";
     public const string ContentFolderTextures = "Textures/";
+
+    private Camera DebugCamera { get; set; }
     
     private readonly GraphicsDeviceManager _graphics;
 
@@ -46,6 +49,11 @@ public class TGCGame : Game
 
     protected override void Initialize()
     {
+        // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
+        
+        DebugCamera = new SimpleCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, 400, 2.0f, 1, 3000);
+
+        // Configuramos nuestras matrices de la escena.
         _world = Matrix.Identity;
         _view = Matrix.CreateLookAt(new Vector3(0, 0, 300), Vector3.Zero, Vector3.Up);
         _projection =
@@ -67,11 +75,11 @@ public class TGCGame : Game
 
         // Cargo los modelos aca abajo utilizando el effect de arriba.
 
-        basicModule = new List<BasicModule>
-        {
+        basicModule =
+        [
             new BasicModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity * Matrix.CreateTranslation(Vector3.Left*100f)),
 
-        };//ContentManager content, string contentFolder3D, string contentFolderEffects
+        ];//ContentManager content, string contentFolder3D, string contentFolderEffects
 
         base.LoadContent();
     }
@@ -80,6 +88,12 @@ public class TGCGame : Game
     protected override void Update(GameTime gameTime)
     {
 
+        //Codigo para camara simple
+        DebugCamera.Update(gameTime);
+        _view = DebugCamera.View;
+        _projection = DebugCamera.Projection;
+
+        // Capturar Input teclado
         if (Keyboard.GetState().IsKeyDown(Keys.Escape))
         {
             Exit();
@@ -90,8 +104,9 @@ public class TGCGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        //El fonde del mundo es balnco.
-        GraphicsDevice.Clear(Color.White);
+        //El fondo es negro
+        GraphicsDevice.Clear(Color.Black);
+
         foreach (BasicModule module in basicModule)
         {
             module.Draw(_view,_projection);
