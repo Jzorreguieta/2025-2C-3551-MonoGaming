@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.Samples.Cameras;
 
 namespace TGC.MonoGame.TP;
 
@@ -18,6 +19,8 @@ public class TGCGame : Game
     public const string ContentFolderSounds = "Sounds/";
     public const string ContentFolderSpriteFonts = "SpriteFonts/";
     public const string ContentFolderTextures = "Textures/";
+
+    private Camera DebugCamera { get; set; }
     
     private readonly GraphicsDeviceManager _graphics;
 
@@ -62,6 +65,9 @@ public class TGCGame : Game
         rasterizerState.CullMode = CullMode.None;
         GraphicsDevice.RasterizerState = rasterizerState;
         // Seria hasta aca.
+
+        
+        DebugCamera = new SimpleCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, 400, 1.0f, 1, 3000);
 
         // Configuramos nuestras matrices de la escena.
         _world = Matrix.Identity;
@@ -111,6 +117,11 @@ public class TGCGame : Game
     protected override void Update(GameTime gameTime)
     {
         // Aca deberiamos poner toda la logica de actualizacion del juego.
+
+        //Codigo para camara simple
+        DebugCamera.Update(gameTime);
+        _view = DebugCamera.View;
+        _projection = DebugCamera.Projection;
 
         // Capturar Input teclado
         if (Keyboard.GetState().IsKeyDown(Keys.Escape))
