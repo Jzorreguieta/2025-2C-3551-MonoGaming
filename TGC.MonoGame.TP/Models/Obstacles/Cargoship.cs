@@ -18,17 +18,17 @@ internal class CargoShip
 
         _worldMatrix = worldMatrix;
         _model = content.Load<Model>(contentFolder3D + "Nave_1/Nave_1");
-        _effect = content.Load<Effect>(contentFolderEffects + "BasicShader").Clone();
+        var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
         
 
 
         foreach (var mesh in _model.Meshes)
         {
-            // Un mesh puede tener mas de 1 mesh part (cada 1 puede tener su propio efecto).
             foreach (var meshPart in mesh.MeshParts)
             {
-                meshPart.Effect = _effect;
-                _effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
+                var meshEffect = effect.Clone();
+                meshPart.Effect = meshEffect;
+                meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.LightBlue.ToVector3());
             }
         }
     }
@@ -36,18 +36,20 @@ internal class CargoShip
 
     public void Draw(Matrix view, Matrix projection)
     {
-        float scale = 0.1f;
-        // Para dibujar le modelo necesitamos pasarle informacion que el efecto esta esperando.
-        _effect.Parameters["View"].SetValue(view);
-        _effect.Parameters["Projection"].SetValue(projection);
+        float scale = 0.015f;
+        
         foreach (var mesh in _model.Meshes)
         {
-        
             var meshWorld = mesh.ParentBone.Transform;
             var scaleMatrix = Matrix.CreateScale(scale);
-            // We set the main matrices for mesh to draw.
-            _effect.Parameters["World"].SetValue(meshWorld * _worldMatrix * scaleMatrix);
-
+            var world = meshWorld * _worldMatrix * scaleMatrix;
+            foreach (var meshPart in mesh.MeshParts )
+            {
+                var effect = meshPart.Effect;
+                effect.Parameters["View"].SetValue(view);
+                effect.Parameters["Projection"].SetValue(projection);
+                effect.Parameters["World"].SetValue(world);
+            }
             // Draw the mesh.
             mesh.Draw();
         }

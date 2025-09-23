@@ -60,12 +60,10 @@ public class TGCGame : Game
 
     protected override void LoadContent()
     {
-        escenario =
-        [
+        escenario = new List<Module>{
             new BasicModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity),
-            new BasicModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity * Matrix.CreateTranslation(Vector3.Left*100f))
-
-        ];
+            new ShipModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.CreateTranslation(Vector3.Left*572f))
+        };
 
         base.LoadContent();
     }
@@ -94,7 +92,7 @@ public class TGCGame : Game
 
         foreach (Module module in escenario)
         {
-            module.Draw(_view,_projection);
+            module.Draw(_view, _projection);
         }
         
         //Cada modelo deberia tener su propio draw.
