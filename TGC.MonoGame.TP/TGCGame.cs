@@ -62,7 +62,8 @@ public class TGCGame : Game
     {
         escenario = new List<Module>{
             new BasicModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity),
-            new ShipModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.CreateTranslation(Vector3.Left*572f))
+            new ShipModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.CreateTranslation(Vector3.Left* 572f)),
+            new BoxModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.CreateTranslation(Vector3.Left* 572f * 2))
         };
 
         base.LoadContent();
