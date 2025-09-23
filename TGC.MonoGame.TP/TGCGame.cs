@@ -21,15 +21,12 @@ public class TGCGame : Game
     
     private readonly GraphicsDeviceManager _graphics;
 
-    private Effect _effect;
-    private Matrix _projection;
-    private SpriteBatch _spriteBatch;
-    private Matrix _view;
-    private Matrix _world;
+    private Microsoft.Xna.Framework.Matrix _projection;
+    private Microsoft.Xna.Framework.Matrix _view;
 
     //Modulo de prueba. Mas adelante deberia ser reemplazado por una lista de modulos
     //Deberia usara polimorfismo.
-    private List<BasicModule> basicModule;
+    private List<Module> escenario;
 
     public TGCGame()
     {
@@ -54,7 +51,6 @@ public class TGCGame : Game
         DebugCamera = new SimpleCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, 400, 2.0f, 1, 3000);
 
         // Configuramos nuestras matrices de la escena.
-        _world = Matrix.Identity;
         _view = Matrix.CreateLookAt(new Vector3(0, 0, 300), Vector3.Zero, Vector3.Up);
         _projection =
             Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 2500);
@@ -64,22 +60,12 @@ public class TGCGame : Game
 
     protected override void LoadContent()
     {
-        //No se que es esto si alguien lo averigua cuenteme. Att:Guido
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-    
-
-        // Cargo un efecto basico propio declarado en el Content pipeline.
-        // En el juego no pueden usar BasicEffect de MG, deben usar siempre efectos propios.
-        _effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-
-        // Cargo los modelos aca abajo utilizando el effect de arriba.
-
-        basicModule =
+        escenario =
         [
-            new BasicModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity * Matrix.CreateTranslation(Vector3.Left*100f)),
+            new BasicModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity),
+            new BasicModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity * Matrix.CreateTranslation(Vector3.Left*100f))
 
-        ];//ContentManager content, string contentFolder3D, string contentFolderEffects
+        ];
 
         base.LoadContent();
     }
@@ -87,7 +73,6 @@ public class TGCGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-
         //Codigo para camara simple
         DebugCamera.Update(gameTime);
         _view = DebugCamera.View;
@@ -107,7 +92,7 @@ public class TGCGame : Game
         //El fondo es negro
         GraphicsDevice.Clear(Color.Black);
 
-        foreach (BasicModule module in basicModule)
+        foreach (Module module in escenario)
         {
             module.Draw(_view,_projection);
         }
@@ -119,7 +104,6 @@ public class TGCGame : Game
 
     protected override void UnloadContent()
     {
-
         Content.Unload();
 
         base.UnloadContent();

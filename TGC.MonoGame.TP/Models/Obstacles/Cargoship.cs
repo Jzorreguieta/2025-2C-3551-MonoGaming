@@ -1,4 +1,3 @@
-
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -6,21 +5,21 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace  TGC.MonoGame.TP;
 
-internal class BasicModule : Module
+internal class CargoShip 
 {
     private Matrix _worldMatrix;
     private Model _model;
     private Effect _effect;
 
-    public BasicModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    public CargoShip(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
     {
 
-        var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(90));
+        //var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(90));
 
-        _worldMatrix = worldMatrix * rotation;
-        _model = content.Load<Model>(contentFolder3D + "Pasillo/Pasillo");
+        _worldMatrix = worldMatrix;
+        _model = content.Load<Model>(contentFolder3D + "Nave_1/Nave_1");
         _effect = content.Load<Effect>(contentFolderEffects + "BasicShader").Clone();
-
+        
 
 
         foreach (var mesh in _model.Meshes)
@@ -29,7 +28,7 @@ internal class BasicModule : Module
             foreach (var meshPart in mesh.MeshParts)
             {
                 meshPart.Effect = _effect;
-                _effect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector3());
+                _effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
             }
         }
     }
@@ -52,13 +51,5 @@ internal class BasicModule : Module
             // Draw the mesh.
             mesh.Draw();
         }
-    }
-
-    private  void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix){}
-    private  void GenerateDecoration(){}
-
-
-    public void Update(GameTime gameTime){
-
     }
 }
