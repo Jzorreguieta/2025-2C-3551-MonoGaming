@@ -1,14 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Collections.Generic;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using TGC.MonoGame.Samples.Cameras;
 
-namespace  TGC.MonoGame.TP;
+using TGC.MonoGaming.Samples.Cameras;
+using TGC.MonoGaming.TP.Models.Obstacles;
+using TGC.MonoGaming.TP.Models.Modules;
 
-public class TGCGame : Game
+
+
+namespace TGC.MonoGame.TP;
+
+public class MonoGaming : Game
 {
     public const string ContentFolder3D = "Models/";
     public const string ContentFolderEffects = "Effects/";
@@ -18,7 +22,7 @@ public class TGCGame : Game
     public const string ContentFolderTextures = "Textures/";
 
     private Camera DebugCamera { get; set; }
-    
+
     private readonly GraphicsDeviceManager _graphics;
 
     private Microsoft.Xna.Framework.Matrix _projection;
@@ -26,9 +30,9 @@ public class TGCGame : Game
 
     //Modulo de prueba. Mas adelante deberia ser reemplazado por una lista de modulos
     //Deberia usara polimorfismo.
-    private List<Module> escenario;
+    private List<IModule> escenario;
 
-    public TGCGame()
+    public MonoGaming()
     {
         // Maneja la configuracion y la administracion del dispositivo grafico.
         _graphics = new GraphicsDeviceManager(this);
@@ -47,7 +51,7 @@ public class TGCGame : Game
     protected override void Initialize()
     {
         // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
-        
+
         DebugCamera = new SimpleCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, 400, 2.0f, 1, 3000);
 
         // Configuramos nuestras matrices de la escena.
@@ -60,12 +64,11 @@ public class TGCGame : Game
 
     protected override void LoadContent()
     {
-        escenario = new List<Module>{
-            new BasicModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity),
-            new ShipModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.CreateTranslation(Vector3.Left* 572f)),
-            new BoxModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.CreateTranslation(Vector3.Left* 572f * 2))
+        var worldMatrix_1 = Matrix.Identity * Matrix.CreateTranslation(Vector3.Left * 60.5f);
+        escenario = new List<IModule>{
+            new BoxModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity),
+            new ShipModule(Content, ContentFolder3D, ContentFolderEffects, worldMatrix_1),
         };
-
         base.LoadContent();
     }
 
@@ -91,11 +94,10 @@ public class TGCGame : Game
         //El fondo es negro
         GraphicsDevice.Clear(Color.Black);
 
-        foreach (Module module in escenario)
+        foreach (IModule module in escenario)
         {
             module.Draw(_view, _projection);
         }
-        
         //Cada modelo deberia tener su propio draw.
         //A menos que sea para prueba no deberian haber dibujos en este metodo
     }

@@ -4,18 +4,17 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace  TGC.MonoGame.TP;
+namespace  TGC.MonoGaming.TP.Models.Modules;
 
-internal class BasicModule : Module
+internal class BasicModule : IModule
 {
     private Matrix _worldMatrix;
     private Model _model;
 
     public BasicModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
     {
-        var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(90));
 
-        _worldMatrix = worldMatrix * rotation;
+        _worldMatrix = worldMatrix;
         _model = content.Load<Model>(contentFolder3D + "Pasillo/Pasillo");
         var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
 
@@ -40,7 +39,7 @@ internal class BasicModule : Module
         {
             var meshWorld = mesh.ParentBone.Transform;
             var scaleMatrix = Matrix.CreateScale(scale);
-            var world = meshWorld * _worldMatrix * scaleMatrix;
+            var world = meshWorld * scaleMatrix * _worldMatrix;
 
             foreach (var meshPart in mesh.MeshParts)
             {

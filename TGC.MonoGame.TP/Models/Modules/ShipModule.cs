@@ -3,10 +3,11 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using TGC.MonoGaming.TP.Models.Obstacles;
 
-namespace  TGC.MonoGame.TP;
+namespace TGC.MonoGaming.TP.Models.Modules;
 
-internal class ShipModule : Module
+internal class ShipModule : IModule
 {
     private Matrix _worldMatrix;
     private Model _model;
@@ -15,9 +16,7 @@ internal class ShipModule : Module
     public ShipModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
     {
 
-        var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(90));
-
-        _worldMatrix = worldMatrix * rotation;
+        _worldMatrix = worldMatrix;
         _model = content.Load<Model>(contentFolder3D + "Pasillo/Pasillo");
         var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
 
@@ -33,17 +32,19 @@ internal class ShipModule : Module
         }
     }
 
-    public void GenerateDecoration(){
+    public void GenerateDecoration()
+    {
         //Deberia generar las decoraciones del modulo.
     }
 
 
     //Deberia generar  una pocision aleatoria con respecto del centro del modulo.
     //De momento se deja con una posicion fija.
-    public void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix){
+    public void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    {
         obstacles = new List<CargoShip>{
-            new CargoShip( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Left * 100f)),
-            new CargoShip( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Right * 900f))
+            new CargoShip( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Forward * 4f)),
+            new CargoShip( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Backward * 4f))
         };
     }
 
@@ -56,7 +57,7 @@ internal class ShipModule : Module
         {
             var meshWorld = mesh.ParentBone.Transform;
             var scaleMatrix = Matrix.CreateScale(scale);
-            var world = meshWorld * _worldMatrix * scaleMatrix;
+            var world = meshWorld * scaleMatrix * _worldMatrix ;
             foreach (var meshPart in mesh.MeshParts)
             {
                 var effect = meshPart.Effect;
@@ -68,16 +69,17 @@ internal class ShipModule : Module
             // Draw the mesh.
             mesh.Draw();
         }
-        
+
         foreach (CargoShip ship in obstacles)
         {
             ship.Draw(view, projection);
         }
     }
-        
 
 
-    public void Update(GameTime gameTime){
+
+    public void Update(GameTime gameTime)
+    {
 
     }
 }

@@ -1,12 +1,13 @@
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using TGC.MonoGaming.TP.Models.Obstacles;
 
-namespace  TGC.MonoGame.TP;
 
-internal class BoxModule : Module
+namespace TGC.MonoGaming.TP.Models.Modules;
+
+internal class BoxModule : IModule
 {
     private Matrix _worldMatrix;
     private Model _model;
@@ -15,9 +16,7 @@ internal class BoxModule : Module
     public BoxModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
     {
 
-        var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(90));
-
-        _worldMatrix = worldMatrix * rotation;
+        _worldMatrix = worldMatrix;
         _model = content.Load<Model>(contentFolder3D + "Pasillo/Pasillo");
         var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
 
@@ -33,17 +32,19 @@ internal class BoxModule : Module
         }
     }
 
-    public void GenerateDecoration(){
+    public void GenerateDecoration()
+    {
         //Deberia generar las decoraciones del modulo.
     }
 
 
     //Deberia generar  una pocision aleatoria con respecto del centro del modulo.
     //De momento se deja con una posicion fija.
-    public void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix){
+    public void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    {
         obstacles = new List<Box>{
-            new Box( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Left * Vector3.Down * 30f),60f),
-            new Box( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Right* Vector3.Up* 40f), 45f)
+            new Box( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Left*3f + Vector3.Down*9f),60f),
+            new Box( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Right*10f + Vector3.Up *3f), 45f)
         };
     }
 
@@ -68,16 +69,17 @@ internal class BoxModule : Module
             // Draw the mesh.
             mesh.Draw();
         }
-        
+
         foreach (Box box in obstacles)
         {
             box.Draw(view, projection);
         }
     }
-        
 
 
-    public void Update(GameTime gameTime){
+
+    public void Update(GameTime gameTime)
+    {
 
     }
 }
