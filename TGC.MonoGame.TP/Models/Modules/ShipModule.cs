@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,7 +11,13 @@ internal class ShipModule : IModule
 {
     private Matrix _worldMatrix;
     private Model _model;
-    private List<CargoShip> obstacles;
+    private List<Ship> obstacles = new List<Ship>();
+
+    //Medidas del Modulo
+    private float scale = 0.1f;
+    private readonly int Up = 6;
+    private readonly int Rigth = 20;
+    private readonly int Foward = 13;
 
     public ShipModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
     {
@@ -40,18 +46,20 @@ internal class ShipModule : IModule
 
     //Deberia generar  una pocision aleatoria con respecto del centro del modulo.
     //De momento se deja con una posicion fija.
+
     public void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
     {
-        obstacles = new List<CargoShip>{
-            new CargoShip( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Forward * 4f)),
-            new CargoShip( content, contentFolder3D, contentFolderEffects,  worldMatrix * Matrix.CreateTranslation(Vector3.Backward * 4f))
-        };
+        int cantidadMaximaDeObstaculos = 2;
+        for(int index = 0; index < cantidadMaximaDeObstaculos; index++)
+        {
+            Matrix traslacionDeNave = Matrix.CreateTranslation(Vector3.Forward * GenerateNumber(this.Foward) + Vector3.Up * GenerateNumber(this.Up) + Vector3.Right * GenerateNumber(this.Rigth));
+            obstacles.Add(new Ship( content, contentFolder3D, contentFolderEffects,  worldMatrix * traslacionDeNave ));
+        }
+        
     }
 
     public void Draw(Matrix view, Matrix projection)
     {
-        float scale = 0.1f;
-        // Para dibujar le modelo necesitamos pasarle informacion que el efecto esta esperando.
 
         foreach (var mesh in _model.Meshes)
         {
@@ -70,7 +78,7 @@ internal class ShipModule : IModule
             mesh.Draw();
         }
 
-        foreach (CargoShip ship in obstacles)
+        foreach (Ship ship in obstacles)
         {
             ship.Draw(view, projection);
         }
@@ -81,5 +89,18 @@ internal class ShipModule : IModule
     public void Update(GameTime gameTime)
     {
 
+    }
+
+    private float GenerateNumber(float x)
+    {
+        Random random = new Random();
+        // random.NextDouble() devuelve un valor entre 0.0 y 1.0
+        // Lo transformamos para que quede entre -x y +x
+        return (float)((random.NextDouble() * 2 - 1) * x);
+    }
+
+    public  string Modulo()
+    {
+        return "Corridor";
     }
 }

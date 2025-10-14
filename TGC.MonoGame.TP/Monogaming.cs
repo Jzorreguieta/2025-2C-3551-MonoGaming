@@ -5,8 +5,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 using TGC.MonoGaming.Samples.Cameras;
-using TGC.MonoGaming.TP.Models.Obstacles;
 using TGC.MonoGaming.TP.Models.Modules;
+using TGC.MonoGaming.TP.Util;
 
 
 
@@ -28,9 +28,14 @@ public class MonoGaming : Game
     private Microsoft.Xna.Framework.Matrix _projection;
     private Microsoft.Xna.Framework.Matrix _view;
 
-    //Modulo de prueba. Mas adelante deberia ser reemplazado por una lista de modulos
-    //Deberia usara polimorfismo.
     private List<IModule> escenario;
+    private EscenarioGenerator escenarioGenerator;
+
+    private const float VELOCIDAD = 20f;
+    private float posicion = 0;
+    
+    float tiempoAcumulado = 0f;
+
 
     public MonoGaming()
     {
@@ -45,6 +50,11 @@ public class MonoGaming : Game
         Content.RootDirectory = "Content";
         // Hace que el mouse sea visible.
         IsMouseVisible = true;
+
+
+        //Inicializo el escenario y su generador infinito
+        escenarioGenerator = new EscenarioGenerator();
+        escenario = null;
     }
 
 
@@ -65,25 +75,40 @@ public class MonoGaming : Game
     protected override void LoadContent()
     {
         var worldMatrix_1 = Matrix.Identity * Matrix.CreateTranslation(Vector3.Left * 60.5f);
-        escenario = new List<IModule>{
-            new BoxModule(Content, ContentFolder3D, ContentFolderEffects, Matrix.Identity),
-            new ShipModule(Content, ContentFolder3D, ContentFolderEffects, worldMatrix_1),
-        };
+        var worldMatrix_2 = Matrix.Identity * Matrix.CreateTranslation(Vector3.Left * 60.5f * 2);
+
+        //Se genera el escenario.
+        escenarioGenerator.GenerarEscenario(ref escenario, Content, ContentFolder3D, ContentFolderEffects);
+        
         base.LoadContent();
     }
 
 
     protected override void Update(GameTime gameTime)
     {
+        posicion += VELOCIDAD * (float) gameTime.ElapsedGameTime.TotalSeconds;
         //Codigo para camara simple
         DebugCamera.Update(gameTime);
         _view = DebugCamera.View;
         _projection = DebugCamera.Projection;
 
+        tiempoAcumulado += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (tiempoAcumulado >= 1f) // cada 1 segundo
+        {
+            tiempoAcumulado = 0f;
+            escenarioGenerator.AvanzarEscenario(ref escenario, Content, ContentFolder3D, ContentFolderEffects);
+        }
+
+
         // Capturar Input teclado
         if (Keyboard.GetState().IsKeyDown(Keys.Escape))
         {
             Exit();
+        }
+        foreach (var modulo in escenario)
+        {
+            modulo.Update(gameTime);
         }
 
         base.Update(gameTime);
