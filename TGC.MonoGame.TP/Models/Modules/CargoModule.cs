@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using TGC.MonoGaming.TP.Models.Obstacles;
+using TGC.MonoGaming.TP.Util;
 
 namespace  TGC.MonoGaming.TP.Models.Modules;
 
@@ -55,7 +56,7 @@ internal class CargoModule : IModule
                 effect.Parameters["View"].SetValue(view);
                 effect.Parameters["Projection"].SetValue(projection);
                 effect.Parameters["World"].SetValue(world);
-                effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
+                effect.Parameters["DiffuseColor"].SetValue(Color.Violet.ToVector3());
             }
             // Draw the mesh.
             mesh.Draw();
@@ -77,13 +78,12 @@ internal class CargoModule : IModule
     private  void GenerateDecoration(){}
 
 
-    public void Update(GameTime gameTime)
+    public void Update(GameTime gameTime, PlayerShip player, EscenarioGenerator generator, ref List<IModule> escenario)
     {
-        
-        foreach(CargoShip ship in obstacles)
-        {
-            ship.Update(gameTime);
-        }
+        foreach (var obstacle in obstacles)
+            obstacle.Update(gameTime, player, generator, ref escenario);
+
+        obstacles.RemoveAll(o => o.estaDestruido);
     }
 
     private float GenerateNumber(float x)

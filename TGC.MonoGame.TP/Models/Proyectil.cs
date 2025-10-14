@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -6,24 +5,28 @@ using Microsoft.Xna.Framework.Graphics;
 using TGC.MonoGaming.TP.Models.Modules;
 using TGC.MonoGaming.TP.Util;
 
-namespace TGC.MonoGaming.TP.Models.Obstacles
+namespace TGC.MonoGaming.TP.Models
 {
-    internal class Ship
+    internal class Proyectil
     {
         private Matrix _worldMatrix;
         private Model _model;
-        private const float SCALE = 0.02f;
+        private const float SCALE = 0.05f;
+        private const float VELOCIDAD = 58.5f;
+
         public bool estaDestruido = false;
-        private BoundingBox _boundingBox;
-        private BoundingBox _worldBoundingBox;
-        public BoundingBox BoundingBox => _worldBoundingBox;
+        private BoundingBox _boundingBoxLocal;
+        private BoundingBox _boundingBoxWorld;
+        public BoundingBox BoundingBox => _boundingBoxWorld;
 
 
-        public Ship(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+
+        public Proyectil(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
         {
-            var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(90));
-            _worldMatrix = rotation * worldMatrix;
-            _model = content.Load<Model>(contentFolder3D + "Nave_1/Nave_1");
+            _worldMatrix = worldMatrix;
+
+            _model = content.Load<Model>(contentFolder3D + "Caja_1/Caja_1");
+
             var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
 
             foreach (var mesh in _model.Meshes)
@@ -32,12 +35,11 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
                 {
                     var meshEffect = effect.Clone();
                     meshPart.Effect = meshEffect;
-                    meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.LightBlue.ToVector3());
+                    meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
                 }
             }
 
-
-            _boundingBox = CalculateBoundingBox(_model);
+            _boundingBoxLocal = CalculateBoundingBox(_model);
             UpdateBoundingBoxWorld();
         }
 
@@ -48,15 +50,15 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
 
             foreach (var mesh in model.Meshes)
             {
-                var transforms = mesh.ParentBone.Transform;
-                foreach (var part in mesh.MeshParts)
+                var meshTransform = mesh.ParentBone.Transform;
+                foreach (var meshPart in mesh.MeshParts)
                 {
-                    var vertexData = new VertexPositionNormalTexture[part.NumVertices];
-                    part.VertexBuffer.GetData(vertexData);
+                    var vertexData = new VertexPositionNormalTexture[meshPart.NumVertices];
+                    meshPart.VertexBuffer.GetData(vertexData);
 
                     foreach (var vertex in vertexData)
                     {
-                        var transformed = Vector3.Transform(vertex.Position, transforms);
+                        var transformed = Vector3.Transform(vertex.Position, meshTransform);
                         min = Vector3.Min(min, transformed);
                         max = Vector3.Max(max, transformed);
                     }
@@ -66,14 +68,14 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
             return new BoundingBox(min, max);
         }
 
-        private void UpdateBoundingBoxWorld(float reductionFactor = 0.6f)
+        private void UpdateBoundingBoxWorld(float reductionFactor = 1f)
         {
             // Aplica escala y mundo
             var scaleMatrix = Matrix.CreateScale(SCALE);
             var worldTransform = scaleMatrix * _worldMatrix;
 
             // Obtiene los 8 vértices del bounding box original
-            var corners = _boundingBox.GetCorners();
+            var corners = _boundingBoxLocal.GetCorners();
             var transformedCorners = new Vector3[corners.Length];
             for (int i = 0; i < corners.Length; i++)
                 transformedCorners[i] = Vector3.Transform(corners[i], worldTransform);
@@ -89,8 +91,9 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
                 transformedCorners[i] = center + (transformedCorners[i] - center) * reductionFactor;
 
             // Crea el bounding box final
-            _worldBoundingBox = BoundingBox.CreateFromPoints(transformedCorners);
+            _boundingBoxWorld = BoundingBox.CreateFromPoints(transformedCorners);
         }
+
 
         public void Draw(Matrix view, Matrix projection)
         {
@@ -117,29 +120,19 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
             UpdateBoundingBoxWorld();
         }
 
-        public void Update(GameTime gameTime, PlayerShip player, EscenarioGenerator generator, ref List<IModule> escenario)
+
+        public void Update(GameTime gameTime)
         {
-            if (this.BoundingBox.Intersects(player.BoundingBox))
-            {
-                player.Restart();
-                Console.WriteLine("Ship");
-                generator.GenerarEscenario(ref escenario);
-            }
-            foreach (var proyectil in player.proyectiles)
-            {
-                if (this.BoundingBox.Intersects(proyectil.BoundingBox))
-                {
-                    this.Destroy();
-                    proyectil.Destroy();
-                }
-            }
+            var nuevoMovimiento = Vector3.Left * 4 * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _worldMatrix = _worldMatrix * Matrix.CreateTranslation(nuevoMovimiento);
+            UpdateBoundingBoxWorld();
+
         }
 
         public void Destroy()
         {
             estaDestruido = true;
         }
+
     }
-    
-    
 }

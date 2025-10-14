@@ -1,7 +1,11 @@
-using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using TGC.MonoGaming.TP.Models.Modules;
+using TGC.MonoGaming.TP.Util;
+using System;
+
 
 namespace TGC.MonoGaming.TP.Models.Obstacles
 {
@@ -10,7 +14,7 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
         private Matrix _worldMatrix;
         private Model _model;
 
-        private float scale = 0.00045f;
+        private const float SCALE = 0.0005f;
 
         private const float ROTACION_MIN = 0f;
         private const float ROTACION_MAX = 45f;
@@ -23,6 +27,8 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
         private static Random random = new Random();
         private float rotacionX;
         private float rotacionY;
+
+        public bool estaDestruido = false;
 
         // ✅ BoundingBox
         private BoundingBox _boundingBoxLocal;
@@ -79,19 +85,30 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
             return new BoundingBox(min, max);
         }
 
-        private void UpdateBoundingBoxWorld()
+        private void UpdateBoundingBoxWorld(float reductionFactor = 0.6f)
         {
-            var scaleMatrix = Matrix.CreateScale(scale);
-            var rotationMatrix = Matrix.CreateRotationX(MathHelper.ToRadians(rotacionX)) *
-                                 Matrix.CreateRotationY(MathHelper.ToRadians(rotacionY));
-            var worldTransform = scaleMatrix * rotationMatrix * _worldMatrix;
+            var rotationXMat = Matrix.CreateRotationX(MathHelper.ToRadians(rotacionX));
+            var rotationYMat = Matrix.CreateRotationY(MathHelper.ToRadians(rotacionY));
+            var scaleMatrix = Matrix.CreateScale(SCALE);
+            var worldTransform = rotationYMat * rotationXMat * scaleMatrix * _worldMatrix;
 
+            // Obtiene los 8 vértices del bounding box original
             var corners = _boundingBoxLocal.GetCorners();
             var transformedCorners = new Vector3[corners.Length];
-
             for (int i = 0; i < corners.Length; i++)
                 transformedCorners[i] = Vector3.Transform(corners[i], worldTransform);
 
+            // Calcula el centro real del bounding box transformado
+            Vector3 center = Vector3.Zero;
+            foreach (var v in transformedCorners)
+                center += v;
+            center /= transformedCorners.Length;
+
+            // Reduce los vértices respecto al centro
+            for (int i = 0; i < transformedCorners.Length; i++)
+                transformedCorners[i] = center + (transformedCorners[i] - center) * reductionFactor;
+
+            // Crea el bounding box final
             _boundingBoxWorld = BoundingBox.CreateFromPoints(transformedCorners);
         }
 
@@ -103,7 +120,7 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
             foreach (var mesh in _model.Meshes)
             {
                 var meshWorld = mesh.ParentBone.Transform;
-                var scaleMatrix = Matrix.CreateScale(scale);
+                var scaleMatrix = Matrix.CreateScale(SCALE);
                 var world = meshWorld * rotationYMat * rotationXMat * scaleMatrix * _worldMatrix;
 
                 foreach (var meshPart in mesh.MeshParts)
@@ -117,12 +134,27 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
             }
         }
 
-        public void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, PlayerShip player, EscenarioGenerator generator, ref List<IModule> escenario)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             rotacionX += velocidadDeRotacion * deltaTime;
 
-            // ✅ Actualizar bounding box en cada frame
+            if (this.BoundingBox.Intersects(player.BoundingBox))
+            {
+                player.Restart();
+                Console.WriteLine("Cargo");
+                generator.GenerarEscenario(ref escenario);
+            }
+            foreach (var proyectil in player.proyectiles)
+            {
+                if (this.BoundingBox.Intersects(proyectil.BoundingBox))
+                {
+                    this.Destroy();
+                    proyectil.Destroy();
+                }
+            }
+
+
             UpdateBoundingBoxWorld();
         }
 
@@ -131,6 +163,12 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
         {
             _worldMatrix = newWorld;
             UpdateBoundingBoxWorld();
+        }
+
+
+        public void Destroy()
+        {
+            estaDestruido = true;
         }
     }
 }

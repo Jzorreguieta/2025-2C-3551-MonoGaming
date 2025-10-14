@@ -1,8 +1,10 @@
-using System.Linq;
-using BepuPhysics.Constraints;
+using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using TGC.MonoGaming.TP.Models.Modules;
+using TGC.MonoGaming.TP.Util;
 
 namespace TGC.MonoGaming.TP.Models.Obstacles
 {
@@ -10,9 +12,10 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
     {
         private Matrix _worldMatrix;
         private Model _model;
-
         private Matrix _rotation;
-        private float scale = 0.05f;
+        private const float SCALE = 0.05f;
+
+        public bool estaDestruido = false;
 
         // ✅ BoundingBox
         private BoundingBox _boundingBoxLocal;
@@ -33,7 +36,7 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
                 {
                     var meshEffect = effect.Clone();
                     meshPart.Effect = meshEffect;
-                    meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.Violet.ToVector3());
+                    meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.Black.ToVector3());
                 }
             }
 
@@ -67,26 +70,35 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
             return new BoundingBox(min, max);
         }
 
-        private void UpdateBoundingBoxWorld()
+
+        private void UpdateBoundingBoxWorld(float reductionFactor = 0.6f)
         {
-            var scaleMatrix = Matrix.CreateScale(scale);
-            var worldTransform = _rotation * scaleMatrix * _worldMatrix;
+            var scaleMatrix = Matrix.CreateScale(SCALE);
+            var worldTransform = scaleMatrix * _worldMatrix;
 
             var corners = _boundingBoxLocal.GetCorners();
             var transformedCorners = new Vector3[corners.Length];
-
             for (int i = 0; i < corners.Length; i++)
                 transformedCorners[i] = Vector3.Transform(corners[i], worldTransform);
 
+            Vector3 center = Vector3.Zero;
+            foreach (var v in transformedCorners)
+                center += v;
+            center /= transformedCorners.Length;
+
+            for (int i = 0; i < transformedCorners.Length; i++)
+                transformedCorners[i] = center + (transformedCorners[i] - center) * reductionFactor;
+
             _boundingBoxWorld = BoundingBox.CreateFromPoints(transformedCorners);
         }
+
 
         public void Draw(Matrix view, Matrix projection)
         {
             foreach (var mesh in _model.Meshes)
             {
                 var meshWorld = mesh.ParentBone.Transform;
-                var scaleMatrix = Matrix.CreateScale(scale);
+                var scaleMatrix = Matrix.CreateScale(SCALE);
                 var world = meshWorld * _rotation * scaleMatrix * _worldMatrix;
 
                 foreach (var meshPart in mesh.MeshParts)
@@ -105,6 +117,29 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
         {
             _worldMatrix = newWorld;
             UpdateBoundingBoxWorld();
+        }
+
+        public void Update(GameTime gameTime, PlayerShip player, EscenarioGenerator generator, ref List<IModule> escenario)
+        {
+            if (this.BoundingBox.Intersects(player.BoundingBox))
+            {
+                player.Restart();
+                Console.WriteLine("Caja");
+                generator.GenerarEscenario(ref escenario);
+            }
+            foreach (var proyectil in player.proyectiles)
+            {
+                if (this.BoundingBox.Intersects(proyectil.BoundingBox))
+                {
+                    this.Destroy();
+                    proyectil.Destroy();
+                }
+            }
+        }
+        
+        public void Destroy()
+        {
+            estaDestruido = true;
         }
     }
 }

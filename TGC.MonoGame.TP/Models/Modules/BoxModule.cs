@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using TGC.MonoGaming.TP.Models.Obstacles;
+using TGC.MonoGaming.TP.Util;
 
 
 namespace TGC.MonoGaming.TP.Models.Modules;
@@ -87,17 +88,18 @@ internal class BoxModule : IModule
 
 
 
-    public void Update(GameTime gameTime)
+    public void Update(GameTime gameTime, PlayerShip player, EscenarioGenerator generator, ref List<IModule> escenario)
     {
+        foreach (var obstacle in obstacles)
+            obstacle.Update(gameTime, player, generator, ref escenario);
 
+        obstacles.RemoveAll(o => o.estaDestruido);
     }
 
 
     private float GenerateNumber(float x)
     {
         Random random = new Random();
-        // random.NextDouble() devuelve un valor entre 0.0 y 1.0
-        // Lo transformamos para que quede entre -x y +x
         return (float)((random.NextDouble() * 2 - 1) * x);
     }
 

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 
 using TGC.MonoGaming.Samples.Cameras;
 using TGC.MonoGaming.TP.Models.Modules;
+using TGC.MonoGaming.TP.Models;
 using TGC.MonoGaming.TP.Util;
 
 
@@ -33,7 +34,9 @@ public class MonoGaming : Game
 
     private const float VELOCIDAD = 20f;
     private float posicion = 0;
-    
+
+    private PlayerShip player;
+
     float tiempoAcumulado = 0f;
 
 
@@ -53,7 +56,7 @@ public class MonoGaming : Game
 
 
         //Inicializo el escenario y su generador infinito
-        escenarioGenerator = new EscenarioGenerator();
+        escenarioGenerator = new EscenarioGenerator(Content, ContentFolder3D, ContentFolderEffects);
         escenario = null;
     }
 
@@ -63,6 +66,8 @@ public class MonoGaming : Game
         // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
 
         DebugCamera = new SimpleCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, 400, 2.0f, 1, 3000);
+
+        player = new PlayerShip(Content, ContentFolder3D, ContentFolderEffects);
 
         // Configuramos nuestras matrices de la escena.
         _view = Matrix.CreateLookAt(new Vector3(0, 0, 300), Vector3.Zero, Vector3.Up);
@@ -78,7 +83,7 @@ public class MonoGaming : Game
         var worldMatrix_2 = Matrix.Identity * Matrix.CreateTranslation(Vector3.Left * 60.5f * 2);
 
         //Se genera el escenario.
-        escenarioGenerator.GenerarEscenario(ref escenario, Content, ContentFolder3D, ContentFolderEffects);
+        escenarioGenerator.GenerarEscenario(ref escenario);
         
         base.LoadContent();
     }
@@ -86,39 +91,44 @@ public class MonoGaming : Game
 
     protected override void Update(GameTime gameTime)
     {
-        posicion += VELOCIDAD * (float) gameTime.ElapsedGameTime.TotalSeconds;
-        //Codigo para camara simple
-        DebugCamera.Update(gameTime);
-        _view = DebugCamera.View;
-        _projection = DebugCamera.Projection;
+
+        //DebugCamera.Update(gameTime);
+        //_view = DebugCamera.View;
+        //_projection = DebugCamera.Projection;
+
+        player.Update(gameTime, ref _view, ref _projection, Content, ContentFolder3D, ContentFolderEffects);
+
+
 
         tiempoAcumulado += (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-        if (tiempoAcumulado >= 1f) // cada 1 segundo
+        if (tiempoAcumulado >= 0.75f)
         {
             tiempoAcumulado = 0f;
             escenarioGenerator.AvanzarEscenario(ref escenario, Content, ContentFolder3D, ContentFolderEffects);
         }
 
 
-        // Capturar Input teclado
         if (Keyboard.GetState().IsKeyDown(Keys.Escape))
         {
             Exit();
         }
+
+
         foreach (var modulo in escenario)
         {
-            modulo.Update(gameTime);
+            modulo.Update(gameTime,player,escenarioGenerator,ref escenario);
         }
 
+
         base.Update(gameTime);
+
     }
 
     protected override void Draw(GameTime gameTime)
     {
         //El fondo es negro
         GraphicsDevice.Clear(Color.Black);
-
+        player.Draw(_view, _projection);
         foreach (IModule module in escenario)
         {
             module.Draw(_view, _projection);

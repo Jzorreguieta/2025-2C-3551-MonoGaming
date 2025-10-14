@@ -1,9 +1,11 @@
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using TGC.MonoGaming.TP.Util;
 
 namespace  TGC.MonoGaming.TP.Models.Modules;
 
@@ -60,7 +62,7 @@ internal class BasicModule : IModule
     private void GenerateDecoration() { }
 
 
-    public void Update(GameTime gameTime)
+    public void Update(GameTime gameTime, PlayerShip player,EscenarioGenerator generator, ref List<IModule> escenario)
     {
 
     }
