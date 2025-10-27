@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.TP.Models.BaseModels;
 
 
-namespace TGC.MonoGaming.TP.Models
+namespace TGC.MonoGame.TP.Models
 {
     internal class PlayerShip
     {
@@ -31,23 +34,16 @@ namespace TGC.MonoGaming.TP.Models
 
         public BoundingBox BoundingBox => _worldBoundingBox;
 
-        public PlayerShip(ContentManager content, string contentFolder3D, string contentFolderEffects)
+        public PlayerShip(ContentManager content)
         {
+            //Recupero el modelo con las texturas
+            _model = Nave_1.GetModel(content);
+
+            //Creo la matriz de mundo inicial
             var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(-90));
             _worldMatrix = rotation * Matrix.Identity;
-            _model = content.Load<Model>(contentFolder3D + "Nave_1/Nave_1");
-            var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
 
-            foreach (var mesh in _model.Meshes)
-            {
-                foreach (var meshPart in mesh.MeshParts)
-                {
-                    var meshEffect = effect.Clone();
-                    meshPart.Effect = meshEffect;
-                    meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.LightBlue.ToVector3());
-                }
-            }
-
+            //Creo al bounding box
             _boundingBox = CalculateBoundingBox(_model);
             UpdateBoundingBoxWorld();
         }
@@ -110,12 +106,17 @@ namespace TGC.MonoGaming.TP.Models
                     effect.Parameters["View"].SetValue(view);
                     effect.Parameters["Projection"].SetValue(projection);
                     effect.Parameters["World"].SetValue(world);
+
+                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                    }
                 }
                 mesh.Draw();
             }
             foreach (var proyectil in proyectiles)
             {
-                proyectil.Draw(view,projection);
+                proyectil.Draw(view, projection);
             }
         }
 
@@ -141,12 +142,12 @@ namespace TGC.MonoGaming.TP.Models
             projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, 16f / 9f, 0.1f, 1000f);
         }
 
-        public void Update(GameTime gameTime, ref Matrix view, ref Matrix projection, ContentManager content, string contentFolder3D, string contentFolderEffects)
+        public void Update(GameTime gameTime, ref Matrix view, ref Matrix projection, ContentManager content)
         {
             Vector3 nuevoMovimiento = Vector3.Zero;
 
             nuevoMovimiento += Vector3.Left * 4 * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            
+
             proyectiles.RemoveAll(o => o.estaDestruido);
 
             tiempoAcumulado += (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -155,11 +156,11 @@ namespace TGC.MonoGaming.TP.Models
                 if (Keyboard.GetState().IsKeyDown(Keys.Space))
                 {
                     tiempoAcumulado = 0f;
-                    proyectiles.Add(new Proyectil(content, contentFolder3D, contentFolderEffects, _worldMatrix));
+                    proyectiles.Add(new Proyectil(content, _worldMatrix));
                 }
-                
+
             }
-            
+
 
 
             if (Keyboard.GetState().IsKeyDown(Keys.Left))
@@ -183,7 +184,7 @@ namespace TGC.MonoGaming.TP.Models
             pos.Y = MathHelper.Clamp(pos.Y, ALTURA_MIN, ALTURA_MAX);
             _worldMatrix.Translation = pos;
 
-            foreach(Proyectil proyectil in proyectiles)
+            foreach (Proyectil proyectil in proyectiles)
             {
                 proyectil.Update(gameTime);
             }

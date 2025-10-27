@@ -1,17 +1,14 @@
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using TGC.MonoGaming.TP.Models.Modules;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.Models.BaseModels;
 
-namespace TGC.MonoGaming.TP.Models
+namespace TGC.MonoGame.TP.Models
 {
     internal class Proyectil
     {
         private Matrix _worldMatrix;
-        private Model _model;
-        private const float SCALE = 0.05f;
+        private const float SCALE = 0.02f;
         private const float VELOCIDAD = 58.5f;
 
         public bool estaDestruido = false;
@@ -19,27 +16,18 @@ namespace TGC.MonoGaming.TP.Models
         private BoundingBox _boundingBoxWorld;
         public BoundingBox BoundingBox => _boundingBoxWorld;
 
+        private Effect _effect;
 
 
-        public Proyectil(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+        public Proyectil(ContentManager content, Matrix worldMatrix)
         {
             _worldMatrix = worldMatrix;
 
-            _model = content.Load<Model>(contentFolder3D + "Caja_1/Caja_1");
+            _effect = content.Load<Effect>(MonoGaming.ContentFolderEffects + "BasicShader").Clone();
 
-            var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
+            _effect.Parameters["DiffuseColor"]?.SetValue(Color.White.ToVector3());
 
-            foreach (var mesh in _model.Meshes)
-            {
-                foreach (var meshPart in mesh.MeshParts)
-                {
-                    var meshEffect = effect.Clone();
-                    meshPart.Effect = meshEffect;
-                    meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
-                }
-            }
-
-            _boundingBoxLocal = CalculateBoundingBox(_model);
+            _boundingBoxLocal = ProyectilModel.GetBoundingBox();
             UpdateBoundingBoxWorld();
         }
 
@@ -97,21 +85,45 @@ namespace TGC.MonoGaming.TP.Models
 
         public void Draw(Matrix view, Matrix projection)
         {
-            foreach (var mesh in _model.Meshes)
-            {
-                var meshWorld = mesh.ParentBone.Transform;
-                var scaleMatrix = Matrix.CreateScale(SCALE);
-                var world = meshWorld * scaleMatrix * _worldMatrix;
+            _effect.Parameters["View"].SetValue(view);
+            _effect.Parameters["Projection"].SetValue(projection);
+            _effect.Parameters["World"].SetValue(_worldMatrix);
 
-                foreach (var meshPart in mesh.MeshParts)
-                {
-                    var effect = meshPart.Effect;
-                    effect.Parameters["View"].SetValue(view);
-                    effect.Parameters["Projection"].SetValue(projection);
-                    effect.Parameters["World"].SetValue(world);
-                }
-                mesh.Draw();
+            foreach (var pass in _effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
             }
+            // Dibujar las primitivas
+            _effect.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionColor>(
+                PrimitiveType.TriangleList, // Dibujar triángulos (superficie sólida)
+                ProyectilModel.GetVertices(new Color(_effect.Parameters["DiffuseColor"].GetValueVector3())),                   // Array de vértices
+                0,                          // Offset de vértices
+                ProyectilModel.GetVertices(new Color(_effect.Parameters["DiffuseColor"].GetValueVector3())).Length,            // Número de vértices
+                ProyectilModel.GetIndices(),                    // Array de índices
+                0,                          // Offset de índices
+                ProyectilModel.GetIndices().Length / 3          // Número de primitivas (índices.Length / 3 = N° de triángulos)
+            );
+
+            // foreach (var mesh in _model.Meshes)
+            // {
+            //     var meshWorld = mesh.ParentBone.Transform;
+            //     var scaleMatrix = Matrix.CreateScale(SCALE);
+            //     var world = meshWorld * scaleMatrix * _worldMatrix;
+
+            //     foreach (var meshPart in mesh.MeshParts)
+            //     {
+            //         var effect = meshPart.Effect;
+            //         effect.Parameters["View"].SetValue(view);
+            //         effect.Parameters["Projection"].SetValue(projection);
+            //         effect.Parameters["World"].SetValue(world);
+
+            //         foreach (var pass in effect.CurrentTechnique.Passes)
+            //         {
+            //             pass.Apply();
+            //         }
+            //     }
+            //     mesh.Draw();
+            // }
         }
 
         public void SetWorldMatrix(Matrix newWorld)

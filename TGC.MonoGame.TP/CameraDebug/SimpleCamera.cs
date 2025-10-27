@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace TGC.MonoGaming.Samples.Cameras
+namespace TGC.MonoGame.TP.CameraDebug
 {
     /// <summary>
     ///     Camera with simple movement.

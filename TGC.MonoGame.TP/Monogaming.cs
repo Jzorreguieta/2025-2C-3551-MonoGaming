@@ -4,10 +4,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using TGC.MonoGaming.Samples.Cameras;
-using TGC.MonoGaming.TP.Models.Modules;
-using TGC.MonoGaming.TP.Models;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.CameraDebug;
+using TGC.MonoGame.TP.Models.Modules;
+using TGC.MonoGame.TP.Models;
+using TGC.MonoGame.TP.Util;
 
 
 
@@ -56,18 +56,19 @@ public class MonoGaming : Game
 
 
         //Inicializo el escenario y su generador infinito
-        escenarioGenerator = new EscenarioGenerator(Content, ContentFolder3D, ContentFolderEffects);
+        escenarioGenerator = new EscenarioGenerator(Content);
         escenario = null;
     }
 
 
     protected override void Initialize()
     {
+        
         // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
 
         DebugCamera = new SimpleCamera(GraphicsDevice.Viewport.AspectRatio, Vector3.UnitZ * 150, 400, 2.0f, 1, 3000);
 
-        player = new PlayerShip(Content, ContentFolder3D, ContentFolderEffects);
+        player = new PlayerShip(Content);
 
         // Configuramos nuestras matrices de la escena.
         _view = Matrix.CreateLookAt(new Vector3(0, 0, 300), Vector3.Zero, Vector3.Up);
@@ -79,12 +80,14 @@ public class MonoGaming : Game
 
     protected override void LoadContent()
     {
+        GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
         var worldMatrix_1 = Matrix.Identity * Matrix.CreateTranslation(Vector3.Left * 60.5f);
         var worldMatrix_2 = Matrix.Identity * Matrix.CreateTranslation(Vector3.Left * 60.5f * 2);
 
         //Se genera el escenario.
         escenarioGenerator.GenerarEscenario(ref escenario);
-        
+        BoundingSphereRenderer.Initialize(GraphicsDevice);
+
         base.LoadContent();
     }
 
@@ -96,7 +99,7 @@ public class MonoGaming : Game
         //_view = DebugCamera.View;
         //_projection = DebugCamera.Projection;
 
-        player.Update(gameTime, ref _view, ref _projection, Content, ContentFolder3D, ContentFolderEffects);
+        player.Update(gameTime, ref _view, ref _projection, Content);
 
 
 
@@ -104,7 +107,7 @@ public class MonoGaming : Game
         if (tiempoAcumulado >= 0.75f)
         {
             tiempoAcumulado = 0f;
-            escenarioGenerator.AvanzarEscenario(ref escenario, Content, ContentFolder3D, ContentFolderEffects);
+            escenarioGenerator.AvanzarEscenario(ref escenario);
         }
 
 
@@ -116,7 +119,7 @@ public class MonoGaming : Game
 
         foreach (var modulo in escenario)
         {
-            modulo.Update(gameTime,player,escenarioGenerator,ref escenario);
+            modulo.Update(gameTime, player, escenarioGenerator, ref escenario);
         }
 
 

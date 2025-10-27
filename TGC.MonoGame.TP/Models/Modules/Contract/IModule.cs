@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.Util;
 
-namespace  TGC.MonoGaming.TP.Models.Modules;
+namespace  TGC.MonoGame.TP.Models.Modules;
 
 internal interface IModule
 {

@@ -4,11 +4,12 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using TGC.MonoGaming.TP.Models.Obstacles;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.Models.BaseModels;
+using TGC.MonoGame.TP.Models.Obstacles;
+using TGC.MonoGame.TP.Util;
 
 
-namespace TGC.MonoGaming.TP.Models.Modules;
+namespace TGC.MonoGame.TP.Models.Modules;
 
 internal class BoxModule : IModule
 {
@@ -18,26 +19,16 @@ internal class BoxModule : IModule
     //Medidas del Modulo
     private float scale = 0.1f;
     private readonly int Up = 8;
-    private readonly int Rigth = 25;
+    private readonly int Right = 25;
     private readonly int Foward = 18;
 
-    public BoxModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    public BoxModule(ContentManager content, Matrix worldMatrix)
     {
+        _model = Pasillo.GetModel(content);
 
         _worldMatrix = worldMatrix;
-        _model = content.Load<Model>(contentFolder3D + "Pasillo/Pasillo");
-        var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
 
-        this.GenerateObstacles(content, contentFolder3D, contentFolderEffects, worldMatrix);
-
-        foreach (var mesh in _model.Meshes)
-        {
-            foreach (var meshPart in mesh.MeshParts)
-            {
-                var meshEffect = effect.Clone();
-                meshPart.Effect = meshEffect;
-            }
-        }
+        GenerateObstacles(content, worldMatrix);
     }
 
     public void GenerateDecoration()
@@ -48,13 +39,13 @@ internal class BoxModule : IModule
 
     //Deberia generar  una pocision aleatoria con respecto del centro del modulo.
     //De momento se deja con una posicion fija.
-    public void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    public void GenerateObstacles(ContentManager content, Matrix worldMatrix)
     {
         int cantidadMaximaDeObstaculos = 6;
         for (int index = 0; index < cantidadMaximaDeObstaculos; index++)
         {
-            Matrix traslacionDeCaja = Matrix.CreateTranslation(Vector3.Forward * GenerateNumber(this.Foward) + Vector3.Up * GenerateNumber(this.Up) + Vector3.Right * GenerateNumber(this.Rigth));
-            obstacles.Add(new Box(content, contentFolder3D, contentFolderEffects, worldMatrix * traslacionDeCaja, GenerateNumber(90)));
+            Matrix traslacionDeCaja = Matrix.CreateTranslation(Vector3.Forward * GenerateNumber(Foward) + Vector3.Up * GenerateNumber(Up) + Vector3.Right * GenerateNumber(Right));
+            obstacles.Add(new Box(content, worldMatrix * traslacionDeCaja, GenerateNumber(90)));
         }
     }
 
@@ -67,14 +58,18 @@ internal class BoxModule : IModule
         {
             var meshWorld = mesh.ParentBone.Transform;
             var scaleMatrix = Matrix.CreateScale(scale);
-            var world = meshWorld * scaleMatrix * _worldMatrix ;
+            var world = meshWorld * scaleMatrix * _worldMatrix;
             foreach (var meshPart in mesh.MeshParts)
             {
                 var effect = meshPart.Effect;
                 effect.Parameters["View"].SetValue(view);
                 effect.Parameters["Projection"].SetValue(projection);
                 effect.Parameters["World"].SetValue(world);
-                effect.Parameters["DiffuseColor"].SetValue(Color.Blue.ToVector3());
+
+                foreach (var pass in effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                }
             }
             // Draw the mesh.
             mesh.Draw();

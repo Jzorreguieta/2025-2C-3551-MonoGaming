@@ -4,10 +4,11 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using TGC.MonoGaming.TP.Models.Obstacles;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.Models.BaseModels;
+using TGC.MonoGame.TP.Models.Obstacles;
+using TGC.MonoGame.TP.Util;
 
-namespace  TGC.MonoGaming.TP.Models.Modules;
+namespace TGC.MonoGame.TP.Models.Modules;
 
 internal class CargoModule : IModule
 {
@@ -15,27 +16,17 @@ internal class CargoModule : IModule
     private Model _model;
     private List<CargoShip> obstacles = new List<CargoShip>();
     private float scale = 0.04f;
-    
+
 
     private float ajusteDeTraslacionY = 6.5f;
     private float ajusteDeTraslacionZ = 18.5f;
 
-    public CargoModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    public CargoModule(ContentManager content, Matrix worldMatrix)
     {
+        _model = Pasillo_Asteroide.GetModel(content);
 
         _worldMatrix = worldMatrix;
-        _model = content.Load<Model>(contentFolder3D + "Pasillo_Astetoroide/AteroidHallWay");
-        var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
-        GenerateObstacles(content, contentFolder3D, contentFolderEffects, worldMatrix);
-
-        foreach (var mesh in _model.Meshes)
-        {
-            foreach (var meshPart in mesh.MeshParts)
-            {
-                var meshEffect = effect.Clone();
-                meshPart.Effect = meshEffect;
-            }
-        }
+        GenerateObstacles(content, worldMatrix);
     }
 
 
@@ -56,7 +47,11 @@ internal class CargoModule : IModule
                 effect.Parameters["View"].SetValue(view);
                 effect.Parameters["Projection"].SetValue(projection);
                 effect.Parameters["World"].SetValue(world);
-                effect.Parameters["DiffuseColor"].SetValue(Color.Violet.ToVector3());
+
+                foreach (var pass in effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                }
             }
             // Draw the mesh.
             mesh.Draw();
@@ -67,15 +62,15 @@ internal class CargoModule : IModule
         }
     }
 
-    public void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    public void GenerateObstacles(ContentManager content, Matrix worldMatrix)
     {
         var traslacion1 = Matrix.CreateTranslation(Vector3.Left * 15f);
         var traslacion2 = Matrix.CreateTranslation(Vector3.Right * 15f);
-        obstacles.Add(new CargoShip(content, contentFolder3D, contentFolderEffects, worldMatrix * traslacion1));
-        obstacles.Add(new CargoShip(content, contentFolder3D, contentFolderEffects, worldMatrix * traslacion2));
-        
+        obstacles.Add(new CargoShip(content, worldMatrix * traslacion1));
+        obstacles.Add(new CargoShip(content, worldMatrix * traslacion2));
+
     }
-    private  void GenerateDecoration(){}
+    private void GenerateDecoration() { }
 
 
     public void Update(GameTime gameTime, PlayerShip player, EscenarioGenerator generator, ref List<IModule> escenario)
@@ -94,7 +89,7 @@ internal class CargoModule : IModule
         return (float)((random.NextDouble() * 2 - 1) * x);
     }
 
-    public  string Modulo()
+    public string Modulo()
     {
         return "Asteroid";
     }

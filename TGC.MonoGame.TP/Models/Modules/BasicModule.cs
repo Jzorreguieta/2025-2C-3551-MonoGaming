@@ -5,40 +5,30 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.Models.BaseModels;
+using TGC.MonoGame.TP.Util;
 
-namespace  TGC.MonoGaming.TP.Models.Modules;
+namespace TGC.MonoGame.TP.Models.Modules;
 
 internal class BasicModule : IModule
 {
     private Matrix _worldMatrix;
     private Model _model;
 
+    private float scale = 0.1f;
 
-    public BasicModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+
+    public BasicModule(ContentManager content, Matrix worldMatrix)
     {
+        _model = Pasillo.GetModel(content);
 
         _worldMatrix = worldMatrix;
-        _model = content.Load<Model>(contentFolder3D + "Pasillo/Pasillo");
-        var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
-
-
-        foreach (var mesh in _model.Meshes)
-        {
-            foreach (var meshPart in mesh.MeshParts)
-            {
-                var meshEffect = effect.Clone();
-                meshPart.Effect = meshEffect;
-            }
-        }
     }
 
 
     public void Draw(Matrix view, Matrix projection)
     {
-        float scale = 0.1f;
         // Para dibujar le modelo necesitamos pasarle informacion que el efecto esta esperando.
-
         foreach (var mesh in _model.Meshes)
         {
             var meshWorld = mesh.ParentBone.Transform;
@@ -51,7 +41,11 @@ internal class BasicModule : IModule
                 effect.Parameters["View"].SetValue(view);
                 effect.Parameters["Projection"].SetValue(projection);
                 effect.Parameters["World"].SetValue(world);
-                effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
+
+                foreach (var pass in effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                }
             }
             // Draw the mesh.
             mesh.Draw();
@@ -62,7 +56,7 @@ internal class BasicModule : IModule
     private void GenerateDecoration() { }
 
 
-    public void Update(GameTime gameTime, PlayerShip player,EscenarioGenerator generator, ref List<IModule> escenario)
+    public void Update(GameTime gameTime, PlayerShip player, EscenarioGenerator generator, ref List<IModule> escenario)
     {
 
     }

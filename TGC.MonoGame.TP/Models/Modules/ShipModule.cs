@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using TGC.MonoGaming.TP.Models.Obstacles;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.Models.BaseModels;
+using TGC.MonoGame.TP.Models.Obstacles;
+using TGC.MonoGame.TP.Util;
 
-namespace TGC.MonoGaming.TP.Models.Modules;
+namespace TGC.MonoGame.TP.Models.Modules;
 
 internal class ShipModule : IModule
 {
@@ -20,23 +21,15 @@ internal class ShipModule : IModule
     private readonly int Rigth = 20;
     private readonly int Foward = 13;
 
-    public ShipModule(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    public ShipModule(ContentManager content, Matrix worldMatrix)
     {
+        //Instancio modelo
+        _model = Pasillo.GetModel(content);
 
+        //Matriz de mundo
         _worldMatrix = worldMatrix;
-        _model = content.Load<Model>(contentFolder3D + "Pasillo/Pasillo");
-        var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
 
-        this.GenerateObstacles(content, contentFolder3D, contentFolderEffects, worldMatrix);
-
-        foreach (var mesh in _model.Meshes)
-        {
-            foreach (var meshPart in mesh.MeshParts)
-            {
-                var meshEffect = effect.Clone();
-                meshPart.Effect = meshEffect;
-            }
-        }
+        GenerateObstacles(content, worldMatrix);
     }
 
     public void GenerateDecoration()
@@ -48,15 +41,15 @@ internal class ShipModule : IModule
     //Deberia generar  una pocision aleatoria con respecto del centro del modulo.
     //De momento se deja con una posicion fija.
 
-    public void GenerateObstacles(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+    public void GenerateObstacles(ContentManager content, Matrix worldMatrix)
     {
         int cantidadMaximaDeObstaculos = 2;
-        for(int index = 0; index < cantidadMaximaDeObstaculos; index++)
+        for (int index = 0; index < cantidadMaximaDeObstaculos; index++)
         {
             Matrix traslacionDeNave = Matrix.CreateTranslation(Vector3.Forward * GenerateNumber(this.Foward) + Vector3.Up * GenerateNumber(this.Up) + Vector3.Right * GenerateNumber(this.Rigth));
-            obstacles.Add(new Ship( content, contentFolder3D, contentFolderEffects,  worldMatrix * traslacionDeNave ));
+            obstacles.Add(new Ship(content, worldMatrix * traslacionDeNave));
         }
-        
+
     }
 
     public void Draw(Matrix view, Matrix projection)
@@ -66,14 +59,18 @@ internal class ShipModule : IModule
         {
             var meshWorld = mesh.ParentBone.Transform;
             var scaleMatrix = Matrix.CreateScale(scale);
-            var world = meshWorld * scaleMatrix * _worldMatrix ;
+            var world = meshWorld * scaleMatrix * _worldMatrix;
             foreach (var meshPart in mesh.MeshParts)
             {
                 var effect = meshPart.Effect;
                 effect.Parameters["View"].SetValue(view);
                 effect.Parameters["Projection"].SetValue(projection);
                 effect.Parameters["World"].SetValue(world);
-                effect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector3());
+
+                foreach (var pass in effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                }
             }
             // Draw the mesh.
             mesh.Draw();
@@ -103,7 +100,7 @@ internal class ShipModule : IModule
         return (float)((random.NextDouble() * 2 - 1) * x);
     }
 
-    public  string Modulo()
+    public string Modulo()
     {
         return "Corridor";
     }

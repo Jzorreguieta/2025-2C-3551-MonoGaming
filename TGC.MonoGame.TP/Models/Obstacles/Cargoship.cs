@@ -2,12 +2,13 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using TGC.MonoGaming.TP.Models.Modules;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.Models.Modules;
+using TGC.MonoGame.TP.Util;
 using System;
+using TGC.MonoGame.TP.Models.BaseModels;
 
 
-namespace TGC.MonoGaming.TP.Models.Obstacles
+namespace TGC.MonoGame.TP.Models.Obstacles
 {
     internal class CargoShip
     {
@@ -35,25 +36,18 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
         private BoundingBox _boundingBoxWorld;
         public BoundingBox BoundingBox => _boundingBoxWorld;
 
-        public CargoShip(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+        public CargoShip(ContentManager content, Matrix worldMatrix)
         {
+            //Modelo
+            _model = Nave_2.GetModel(content);
+
+            //Calculo rotacion
             rotacionY = random.NextSingle() * (ROTACION_MAX - ROTACION_MIN) + ROTACION_MIN;
             rotacionX = random.NextSingle() * (ROTACION_MAX - ROTACION_MIN) + ROTACION_MIN;
             velocidadDeRotacion = random.NextSingle() * (VELOCIDAD_ROTACION_MAX - VELOCIDAD_ROTACION_MIN) + VELOCIDAD_ROTACION_MIN;
 
+            //Matriz de mundo
             _worldMatrix = worldMatrix;
-            _model = content.Load<Model>(contentFolder3D + "Nave_2/Nave_2");
-            var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
-
-            foreach (var mesh in _model.Meshes)
-            {
-                foreach (var meshPart in mesh.MeshParts)
-                {
-                    var meshEffect = effect.Clone();
-                    meshPart.Effect = meshEffect;
-                    meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.LightBlue.ToVector3());
-                }
-            }
 
             // ✅ Calcular BoundingBox local
             _boundingBoxLocal = CalculateBoundingBox(_model);
@@ -129,6 +123,11 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
                     effect.Parameters["View"].SetValue(view);
                     effect.Parameters["Projection"].SetValue(projection);
                     effect.Parameters["World"].SetValue(world);
+
+                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                    }
                 }
                 mesh.Draw();
             }

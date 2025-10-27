@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using TGC.MonoGaming.TP.Models.Modules;
-using TGC.MonoGaming.TP.Util;
+using TGC.MonoGame.TP.Models.BaseModels;
+using TGC.MonoGame.TP.Models.Modules;
+using TGC.MonoGame.TP.Util;
 
-namespace TGC.MonoGaming.TP.Models.Obstacles
+namespace TGC.MonoGame.TP.Models.Obstacles
 {
     internal class Ship
     {
@@ -19,23 +20,14 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
         public BoundingBox BoundingBox => _worldBoundingBox;
 
 
-        public Ship(ContentManager content, string contentFolder3D, string contentFolderEffects, Matrix worldMatrix)
+        public Ship(ContentManager content, Matrix worldMatrix)
         {
+            //Instancio model
+            _model = Nave_1.GetModel(content);
+
+            //Matriz de mundo
             var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(90));
             _worldMatrix = rotation * worldMatrix;
-            _model = content.Load<Model>(contentFolder3D + "Nave_1/Nave_1");
-            var effect = content.Load<Effect>(contentFolderEffects + "BasicShader");
-
-            foreach (var mesh in _model.Meshes)
-            {
-                foreach (var meshPart in mesh.MeshParts)
-                {
-                    var meshEffect = effect.Clone();
-                    meshPart.Effect = meshEffect;
-                    meshPart.Effect.Parameters["DiffuseColor"].SetValue(Color.LightBlue.ToVector3());
-                }
-            }
-
 
             _boundingBox = CalculateBoundingBox(_model);
             UpdateBoundingBoxWorld();
@@ -106,6 +98,11 @@ namespace TGC.MonoGaming.TP.Models.Obstacles
                     effect.Parameters["View"].SetValue(view);
                     effect.Parameters["Projection"].SetValue(projection);
                     effect.Parameters["World"].SetValue(world);
+
+                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                    }
                 }
                 mesh.Draw();
             }
