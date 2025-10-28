@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -15,7 +16,7 @@ namespace TGC.MonoGame.TP.Models
         private Matrix _worldMatrix;
         private Model _model;
 
-        private int cantidad_de_balas;
+        private int cantidad_de_balas = 10;
         public List<Proyectil> proyectiles = new List<Proyectil>();
 
         private float tiempoAcumulado = 0f;
@@ -26,6 +27,8 @@ namespace TGC.MonoGame.TP.Models
         private const float ALTURA_MIN = -5f;
         private const float ALTURA_MAX = 10f;
 
+        private bool estaDestruido = false;
+
 
         private float angulo = 0;
 
@@ -34,8 +37,13 @@ namespace TGC.MonoGame.TP.Models
 
         public BoundingBox BoundingBox => _worldBoundingBox;
 
+        private SoundEffect sonidoColision;
+
+
         public PlayerShip(ContentManager content)
         {
+            sonidoColision = content.Load<SoundEffect>(MonoGaming.ContentFolderSounds + "ExplosionJugador");
+
             //Recupero el modelo con las texturas
             _model = Nave_1.GetModel(content);
 
@@ -144,6 +152,7 @@ namespace TGC.MonoGame.TP.Models
 
         public void Update(GameTime gameTime, ref Matrix view, ref Matrix projection, ContentManager content)
         {
+            KeyboardState keyboardState = Keyboard.GetState();
             Vector3 nuevoMovimiento = Vector3.Zero;
 
             nuevoMovimiento += Vector3.Left * 4 * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -151,30 +160,31 @@ namespace TGC.MonoGame.TP.Models
             proyectiles.RemoveAll(o => o.estaDestruido);
 
             tiempoAcumulado += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (tiempoAcumulado >= TIME_BETWEEN_SHOTS)
+            if (cantidad_de_balas > 0 && tiempoAcumulado >= TIME_BETWEEN_SHOTS)
             {
-                if (Keyboard.GetState().IsKeyDown(Keys.Space))
+                if (keyboardState.IsKeyDown(Keys.Space))
                 {
+                    cantidad_de_balas--;
                     tiempoAcumulado = 0f;
-                    proyectiles.Add(new Proyectil(content, _worldMatrix));
+                    proyectiles.Add(new Proyectil(content, _worldMatrix, gameTime.TotalGameTime.TotalSeconds));
                 }
 
             }
 
 
 
-            if (Keyboard.GetState().IsKeyDown(Keys.Left))
+            if (keyboardState.IsKeyDown(Keys.Left))
                 angulo -= VELOCIDAD_DE_GIRO * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (Keyboard.GetState().IsKeyDown(Keys.Right))
+            if (keyboardState.IsKeyDown(Keys.Right))
                 angulo += VELOCIDAD_DE_GIRO * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            if (Keyboard.GetState().IsKeyDown(Keys.A))
+            if (keyboardState.IsKeyDown(Keys.A))
                 nuevoMovimiento += Vector3.Backward * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (Keyboard.GetState().IsKeyDown(Keys.W))
+            if (keyboardState.IsKeyDown(Keys.W))
                 nuevoMovimiento += Vector3.Up * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (Keyboard.GetState().IsKeyDown(Keys.S))
+            if (keyboardState.IsKeyDown(Keys.S))
                 nuevoMovimiento += Vector3.Down * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (Keyboard.GetState().IsKeyDown(Keys.D))
+            if (keyboardState.IsKeyDown(Keys.D))
                 nuevoMovimiento += Vector3.Forward * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             var traslacion = Matrix.CreateTranslation(nuevoMovimiento);
@@ -192,8 +202,21 @@ namespace TGC.MonoGame.TP.Models
             UpdateCamera(gameTime, ref view, ref projection);
         }
 
+        public void Destroy()
+        {
+            sonidoColision.Play();
+            estaDestruido = true;
+        }
+
+        public bool EstaDestruido()
+        {
+            return estaDestruido;
+        }
+
         public void Restart()
         {
+            estaDestruido = false;
+            cantidad_de_balas = 10;
             var rotation = Matrix.CreateRotationY(MathHelper.ToRadians(-90));
             _worldMatrix = rotation * Matrix.Identity;
         }

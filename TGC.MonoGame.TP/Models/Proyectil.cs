@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using TGC.MonoGame.TP.Models.BaseModels;
@@ -18,17 +19,26 @@ namespace TGC.MonoGame.TP.Models
 
         private Effect _effect;
 
+        private SoundEffect sonidoDisparo;
+        private SoundEffect sonidoColision;
 
-        public Proyectil(ContentManager content, Matrix worldMatrix)
+        private double tiempoCreacion = 0;
+
+        public Proyectil(ContentManager content, Matrix worldMatrix, double tiempoCreacion)
         {
             _worldMatrix = worldMatrix;
 
             _effect = content.Load<Effect>(MonoGaming.ContentFolderEffects + "BasicShader").Clone();
-
             _effect.Parameters["DiffuseColor"]?.SetValue(Color.White.ToVector3());
 
+            sonidoColision = content.Load<SoundEffect>(MonoGaming.ContentFolderSounds + "Explosion");
+
+            sonidoDisparo = content.Load<SoundEffect>(MonoGaming.ContentFolderSounds + "ProyectilLaser");
+            sonidoDisparo.Play();
             _boundingBoxLocal = ProyectilModel.GetBoundingBox();
             UpdateBoundingBoxWorld();
+
+            this.tiempoCreacion = tiempoCreacion;
         }
 
         private BoundingBox CalculateBoundingBox(Model model)
@@ -135,14 +145,24 @@ namespace TGC.MonoGame.TP.Models
 
         public void Update(GameTime gameTime)
         {
-            var nuevoMovimiento = Vector3.Left * 4 * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            _worldMatrix = _worldMatrix * Matrix.CreateTranslation(nuevoMovimiento);
-            UpdateBoundingBoxWorld();
-
+            if ((gameTime.TotalGameTime.TotalSeconds - tiempoCreacion) > 2)
+            {
+                Destroy(false);
+            }
+            else
+            {
+                var nuevoMovimiento = Vector3.Left * 4 * VELOCIDAD * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                _worldMatrix = _worldMatrix * Matrix.CreateTranslation(nuevoMovimiento);
+                UpdateBoundingBoxWorld();
+            }
         }
 
-        public void Destroy()
+        public void Destroy(bool fueColision)
         {
+            if (fueColision)
+            {
+                sonidoColision.Play(0.5f, 0, 0);
+            }
             estaDestruido = true;
         }
 

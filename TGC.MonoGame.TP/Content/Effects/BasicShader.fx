@@ -17,38 +17,18 @@ float4x4 World;
 float4x4 View;
 float4x4 Projection;
 
-uniform bool hasTexture = false;
-
-
-// // Texturas
-// Texture2D DiffuseMap;
-// Texture2D AOMap;
-// Texture2D NormalMap;
-
-// // Sampler
-// SamplerState s
-// {
-//     Filter = ANISOTROPIC;
-//     AddressU = Wrap;
-//     AddressV = Wrap;
-// };
-
-float3 DiffuseColor;
+float4 DiffuseColor;
 
 float Time = 0;
 
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
-	// float3 Normal   : NORMAL0;
-    // float2 TexCoord : TEXCOORD0;
 };
 
 struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
-	// float3 Normal   : TEXCOORD0;
-    // float2 TexCoord : TEXCOORD1;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -62,31 +42,12 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	// View space to Projection space
     output.Position = mul(viewPosition, Projection);
 
-	// output.Normal = mul(input.Normal, (float3x3)World);
-    // output.TexCoord = input.TexCoord;
-
     return output;
 }
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
-	// if(hasTexture){
-	// float3 normal = normalize(input.Normal);
-    // float3 lightDir = normalize(float3(0.5f, -1.0f, -0.5f));
-    // float lightIntensity = saturate(dot(normal, -lightDir));
-
-    // float4 diffuseColor = DiffuseMap.Sample(s, input.TexCoord);
-    // float4 ao = AOMap.Sample(s, input.TexCoord);
-    // float4 normalMapSample = NormalMap.Sample(s, input.TexCoord);
-
-    // // Fake normal mapping (just for visual variation)
-    // normal += (normalMapSample.rgb * 2.0f - 1.0f) * 0.3f;
-
-    // float3 finalColor = diffuseColor.rgb * lightIntensity * ao.r;
-
-    // return float4(finalColor, 1.0f);
-	// }
-	return float4(DiffuseColor, 1.0f);
+	return float4(DiffuseColor);
 
 }
 

@@ -26,6 +26,7 @@ namespace TGC.MonoGame.TP.Models.Obstacles
         private BoundingSphere _boundingSphereLocal;
         private BoundingSphere _boundingSphereWorld;
         public BoundingSphere BoundingSphere => _boundingSphereWorld;
+        
 
         public Box(ContentManager content, Matrix worldMatrix, float angle)
         {
@@ -161,16 +162,15 @@ namespace TGC.MonoGame.TP.Models.Obstacles
         {
             if (BoundingSphere.Intersects(player.BoundingBox))
             {
-                player.Restart();
+                player.Destroy();
                 Console.WriteLine("Caja");
-                generator.GenerarEscenario(ref escenario);
             }
             foreach (var proyectil in player.proyectiles)
             {
                 if (BoundingSphere.Intersects(proyectil.BoundingBox))
                 {
                     Destroy();
-                    proyectil.Destroy();
+                    proyectil.Destroy(true);
                 }
             }
             // if (this.BoundingBox.Intersects(player.BoundingBox))

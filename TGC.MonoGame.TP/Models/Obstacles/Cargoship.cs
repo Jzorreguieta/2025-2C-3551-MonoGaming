@@ -140,16 +140,15 @@ namespace TGC.MonoGame.TP.Models.Obstacles
 
             if (this.BoundingBox.Intersects(player.BoundingBox))
             {
-                player.Restart();
-                Console.WriteLine("Cargo");
-                generator.GenerarEscenario(ref escenario);
+                player.Destroy();
+                Console.WriteLine("Caja");
             }
             foreach (var proyectil in player.proyectiles)
             {
                 if (this.BoundingBox.Intersects(proyectil.BoundingBox))
                 {
                     this.Destroy();
-                    proyectil.Destroy();
+                    proyectil.Destroy(true);
                 }
             }
 
